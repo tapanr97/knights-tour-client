@@ -1,11 +1,84 @@
 import React, { Component } from 'react';
 import './App.css';
-import Board from './components/Board';
+
+class Square extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      value: null,
+      color: 'white'
+    };
+    this.handleChange = this.handleChange.bind(this);
+  }
+
+  handleChange = () => this.setState({value: this.props.value, color: 'red'})
+
+
+  render() {
+    let i = this.props.x;
+    let j = this.props.y;
+    if((i % 2) == 1 && (j % 2) == 1)
+      this.state.color = 'white';
+    else if((i % 2) == 1 && (j % 2) == 0) 
+      this.state.color = 'black';
+    else if((i % 2) == 0 && (j % 2) == 1)
+      this.state.color = 'black';
+    else  
+      this.state.color = 'white';
+    return (
+      <input 
+      className="square" 
+      style = {{backgroundColor: this.state.color}}
+      onclick={this.handleChange} 
+      type="button" 
+      value={this.state.value} 
+      id={this.props.value}></input>
+    );
+  }
+}
+
+class Board extends Component {
+
+  constructor(props) {
+    super(props);
+    this.state = {
+      dimensions : 6
+    }
+  }
+
+  renderSquare(i, j) {
+    return <Square value={this.state.dimensions * i + j} x = {i} y = {j}/>;
+  }
+
+  createTable = () => {
+    let rows = [];
+    for(let i = 0; i < this.state.dimensions; i++) {
+      let cols = [];
+      for(let j = 0; j < this.state.dimensions; j++) {
+        cols.push(this.renderSquare(i, j));
+      }
+      rows.push(<div className='board-row'>{cols}</div>);
+    }
+    return rows;
+  }
+
+  render() {
+    if(this.props.dimensions > 6) this.state.dimensions = this.props.dimensions;
+    else this.state.dimensions = 6;
+    return (
+      <div className="board">
+        <div>
+          {this.createTable()}
+        </div>
+      </div>
+    );
+  }
+}
 
 function changeStyle(prevInd, index, move_no) { 
   var urlString = 'url(' + require('./Capture.PNG') + ')';
   document.getElementById(index).style.background = urlString;   
-  document.getElementById(index).style.backgroundSize = "30px 30px";   
+  document.getElementById(index).style.backgroundSize = "40px 40px";   
   if(prevInd != -1) {
     document.getElementById(prevInd).value = move_no - 1; 
     document.getElementById(prevInd).style.background = '#fff968'; 
@@ -16,6 +89,7 @@ class App extends Component {
   constructor(props) {
     super(props);
     this.state = {
+      ind: 0,
       arr: [],
       dimensions: 6,
       x: 0,
@@ -28,11 +102,6 @@ class App extends Component {
   }
 
   handleStart = (e) => {
-
-    document.getElementById("in1").disabled = 'true';
-    document.getElementById("in2").disabled = 'true';
-    document.getElementById("in3").disabled = 'true';     
-    document.getElementById("in4").disabled = 'true';
 
     e.preventDefault();
     let that = this;
@@ -48,14 +117,10 @@ class App extends Component {
       }
     }
     request.send(JSON.stringify(this.state));
-   
-   
     let tmp = 0;
     let prevInd = -1;
     let arr = this.state.arr.ans;
     let size = arr.length - 1;
-    
-    
     let myid = setInterval(function run(){
       let splt = arr[tmp].split(" ");
       let ind = parseInt(splt[1]) * parseInt(that.state.dimensions) + parseInt(splt[2]); 
@@ -66,11 +131,6 @@ class App extends Component {
         clearInterval(myid);
     }, this.state.interval);
     this.state.id = myid;
-    document.getElementById("in1").disabled = '';
-    document.getElementById("in2").disabled = '';
-    document.getElementById("in3").disabled = '';     
-    document.getElementById("in4").disabled = '';
-
   }
 
   handleInput = ({target}) => {
@@ -80,12 +140,6 @@ class App extends Component {
   }
 
   handleClear = () => {
-    
-    document.getElementById("in1").disabled = '';
-    document.getElementById("in2").disabled = '';
-    document.getElementById("in3").disabled = '';     
-    document.getElementById("in4").disabled = '';
-
     clearInterval(this.state.id);
     for(let i = 0; i < this.state.dimensions; i++) {
       for(let j = 0; j < this.state.dimensions; j++) {
@@ -108,11 +162,10 @@ class App extends Component {
 
   render() {
     return (
-      
       <div className="dash">
           <div style={{width: "50%"}}>
             <h1 style={{color:"yellow", fontSize:"50px"}}> Knight's Tour </h1>
-            <h2 style={{color:"yellow", fontSize:"30px"}}> IT485 – Logic of Inference </h2>
+            <h2 style={{color:"yellow", fontSize:"30px"}}> IT486 – Logic of Inference </h2>
           </div>
         <div className="game">
           <div className="game-board">
